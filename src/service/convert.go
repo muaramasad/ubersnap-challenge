@@ -1,71 +1,75 @@
 package service
-import (
-    "fmt"
-    "log"
-    "strings"
-    "os/exec"
 
-    "github.com/gofiber/fiber/v2"
-    "github.com/google/uuid"
+import (
+	"fmt"
+	"log"
+	"os"
+	"os/exec"
+	"strings"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 // Process Converting Image
 func ProcessConvert(c *fiber.Ctx) error {
-    newExt := "jpeg"
+	newExt := "jpeg"
 
-    // parse incomming image file
+	port := os.Getenv("APP_PORT")
 
-    file, err := c.FormFile("image")
+	// parse incomming image file
 
-    if err != nil {
-        log.Println("image upload error --> ", err)
-        return c.JSON(fiber.Map{"status": 500, "message": "Server error", "data": nil})
+	file, err := c.FormFile("image")
 
-    }
+	if err != nil {
+		log.Println("image upload error --> ", err)
+		return c.JSON(fiber.Map{"status": 500, "message": "Server error", "data": nil})
 
-    // generate new uuid for image name 
-    uniqueId := uuid.New()
+	}
 
-    // remove "- from imageName"
+	// generate new uuid for image name
+	uniqueId := uuid.New()
 
-    filename := strings.Replace(uniqueId.String(), "-", "", -1)
+	// remove "- from imageName"
 
-    // extract image extension from original file filename
+	filename := strings.Replace(uniqueId.String(), "-", "", -1)
 
-    fileExt := strings.Split(file.Filename, ".")[1]
+	// extract image extension from original file filename
 
-    // generate image from filename and extension
-    image := fmt.Sprintf("%s.%s", filename, fileExt)
+	fileExt := strings.Split(file.Filename, ".")[1]
 
-    outputImage := fmt.Sprintf("%s.%s", filename, newExt)
+	// generate image from filename and extension
+	image := fmt.Sprintf("%s.%s", filename, fileExt)
 
-    // save image to ./images dir 
-    err = c.SaveFile(file, fmt.Sprintf("./images/%s", image))
+	outputImage := fmt.Sprintf("%s.%s", filename, newExt)
 
-    if err != nil {
-        log.Println("image save error --> ", err)
-        return c.JSON(fiber.Map{"status": 500, "message": "Server error", "data": nil})
-    }
+	// save image to ./images dir
+	err = c.SaveFile(file, fmt.Sprintf("./images/%s", image))
 
-    inputFilePath := fmt.Sprintf("./images/%s", image)
-    outputFilePath := fmt.Sprintf("./images/%s", outputImage)
+	if err != nil {
+		log.Println("image save error --> ", err)
+		return c.JSON(fiber.Map{"status": 500, "message": "Server error", "data": nil})
+	}
 
-    // Run FFmpeg command
-    cmd := exec.Command("ffmpeg", "-i", inputFilePath, outputFilePath)
-    err = cmd.Run()
-    if err != nil {
-        log.Println("Error converting:", err)
-        return c.SendStatus(fiber.StatusInternalServerError)
-    }
+	inputFilePath := fmt.Sprintf("./images/%s", image)
+	outputFilePath := fmt.Sprintf("./images/%s", outputImage)
 
-    // generate image url to serve to client using CDN
-    newImageUrl := fmt.Sprintf("http://localhost:8080/api/v1/view/%s", outputImage)
+	// Run FFmpeg command
+	cmd := exec.Command("ffmpeg", "-i", inputFilePath, outputFilePath)
+	err = cmd.Run()
+	if err != nil {
+		log.Println("Error converting:", err)
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
 
-    // create meta data and send to client
+	// generate image url to serve to client using CDN
+	newImageUrl := fmt.Sprintf("http://localhost:"+port+"/api/v1/view/%s", outputImage)
 
-    data := map[string]interface{}{
-        "imageUrl":  newImageUrl,
-    }
+	// create meta data and send to client
 
-    return c.JSON(fiber.Map{"status": 200, "message": "Image converted successfully", "data": data})
+	data := map[string]interface{}{
+		"imageUrl": newImageUrl,
+	}
+
+	return c.JSON(fiber.Map{"status": 200, "message": "Image converted successfully", "data": data})
 }

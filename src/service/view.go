@@ -1,10 +1,12 @@
 package service
+
 import (
-    "github.com/gofiber/fiber/v2"
-	"io/ioutil"
-	"path/filepath"
 	"fmt"
+	"io/ioutil"
 	"mime"
+	"path/filepath"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // Process Converting Image

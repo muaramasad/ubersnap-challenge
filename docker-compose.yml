@@ -4,8 +4,10 @@ services:
   web:
     build: .
     ports:
-      - "8080:8080"
+      - ${APP_PORT}:${APP_PORT}
     volumes:
       - ./src:/usr/src/app
       - ./libs:/usr/src/libs
     command: air ./cmd/main.go -b 0.0.0.0
+    environment:
+      - APP_PORT=${APP_PORT}
