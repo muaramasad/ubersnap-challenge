@@ -1,0 +1,14 @@
+*.dylib
+*.mode1v3
+*.o
+*.lo
+*.pbxproj
+*.pbxuser
+build
+DerivedData
+pngloss
+*.obj
+*.lib
+config.mk
+test/test
+target/
