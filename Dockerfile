@@ -1,7 +1,6 @@
 FROM golang:latest
 
 RUN apt-get update && apt-get install ffmpeg -y
-RUN apt-get install python3-opencv -y
 RUN apt-get install libpng-dev -y
 
 WORKDIR /usr/src/app
@@ -18,4 +17,7 @@ RUN make
 RUN make install
 
 WORKDIR /usr/src/app
+
+RUN go test ./test/  -coverpkg=./... -coverprofile ./coverage.out
+
 RUN go mod tidy
